@@ -27,7 +27,7 @@
 
 
 //Constructor
-START::CheckFit::CheckFit(BandsFactory &BandsFact ,std::vector<Band> &BandArray, Hypothesis &hypo)
+START::CheckFit::CheckFit(BandsFactory &BandsFact ,std::vector<Band> &BandArray, Hypothesis &hypo):trandom()
 {
   //Initialize the N_On of the array to O
   double n_on=0.;
@@ -50,7 +50,6 @@ void START::CheckFit::add_N_On(std::vector<Band> &BandArray)
  { 
    double mean_signal, mean_background;
    double On_mean, On;
-
    for(unsigned int iband(0); iband<BandArray.size(); iband++) {
     
      for(unsigned int ibin(0); ibin<BandArray[iband].ebin.size(); ibin++) {
@@ -60,10 +59,11 @@ void START::CheckFit::add_N_On(std::vector<Band> &BandArray)
        mean_signal=fCompRes->FunctionExpectedExcess(&BandArray[iband],&BandArray[iband].ebin[ibin],fHypothesis->GetFittedParameters(), -1, -1);
        //std:: cout << "mean_signal = " << mean_signal << std::endl ;
        mean_background=BandArray[iband].GetAlphaRun()*BandArray[iband].ebin[ibin].GetOff();
-       //std:: cout << "background OFF = " << fBandArray[iband].ebin[ibin].GetOff() << std::endl ;
+       //std:: cout << "background OFF = " << BandArray[iband].ebin[ibin].GetOff() << std::endl ;
+       //std:: cout << "alpha run = " << BandArray[iband].GetAlphaRun() << std::endl ;
        //std:: cout << "mean_background = " << mean_background << std::endl ;
        On_mean= mean_signal + mean_background;
-       TRandom trandom;
+       //std:: cout << "On_mean = " << On_mean << std::endl;
        On = trandom.Poisson(On_mean);
        //std:: cout << "On = " << On << std::endl;
        BandArray[iband].ebin[ibin].SetOn(On);
