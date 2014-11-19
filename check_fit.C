@@ -50,6 +50,8 @@ void START::CheckFit::add_N_On(std::vector<Band> &BandArray)
  { 
    double mean_signal, mean_background;
    double On_mean, On;
+   //std:: cout << fHypothesis->GetFittedParameters()[0] <<std::endl;
+   //std:: cout << fHypothesis->GetFittedParameters()[1] <<std::endl;
    for(unsigned int iband(0); iband<BandArray.size(); iband++) {
     
      for(unsigned int ibin(0); ibin<BandArray[iband].ebin.size(); ibin++) {
