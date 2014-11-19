@@ -41,8 +41,9 @@ START::CheckFit::CheckFit(BandsFactory &BandsFact ,std::vector<Band> &BandArray,
   fCompRes = new ComputeResults(BandArray,*fHypothesis);
 }
 
-START::CheckFit::~CheckFit()
-{
+START::CheckFit::~CheckFit(){
+  delete fCompRes;
+  delete fHypothesis;
 }
 
 void START::CheckFit::add_N_On(std::vector<Band> &BandArray)
@@ -57,14 +58,14 @@ void START::CheckFit::add_N_On(std::vector<Band> &BandArray)
        //std:: cout << "phi0 =" << fHypothesis->GetFittedParameters()[0] << std::endl;
        //std:: cout << "gamma =" <<fHypothesis->GetFittedParameters()[1] << std::endl;
        mean_signal=fCompRes->FunctionExpectedExcess(&BandArray[iband],&BandArray[iband].ebin[ibin],fHypothesis->GetFittedParameters(), -1, -1);
-       std:: cout << "mean_signal = " << mean_signal << std::endl ;
+       //std:: cout << "mean_signal = " << mean_signal << std::endl ;
        mean_background=BandArray[iband].GetAlphaRun()*BandArray[iband].ebin[ibin].GetOff();
        //std:: cout << "background OFF = " << fBandArray[iband].ebin[ibin].GetOff() << std::endl ;
-       std:: cout << "mean_background = " << mean_background << std::endl ;
+       //std:: cout << "mean_background = " << mean_background << std::endl ;
        On_mean= mean_signal + mean_background;
        TRandom trandom;
        On = trandom.Poisson(On_mean);
-       std:: cout << "On = " << On << std::endl;
+       //std:: cout << "On = " << On << std::endl;
        BandArray[iband].ebin[ibin].SetOn(On);
        
      }
