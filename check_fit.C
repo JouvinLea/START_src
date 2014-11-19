@@ -42,8 +42,8 @@ START::CheckFit::CheckFit(BandsFactory &BandsFact ,std::vector<Band> &BandArray,
 }
 
 START::CheckFit::~CheckFit(){
-  delete fCompRes;
-  delete fHypothesis;
+  if (fCompRes!=0) delete fCompRes;
+  fCompRes = 0;
 }
 
 void START::CheckFit::add_N_On(std::vector<Band> &BandArray)
