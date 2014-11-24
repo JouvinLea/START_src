@@ -1,4 +1,4 @@
-// STL
+ // STL
 #include <iostream>
 #include <vector>
 
@@ -1508,3 +1508,18 @@ bool START::BandsFactory::CheckIfEntireRunIncludedInSingleTimeWindow(double Time
 
   return IsIncluded;
 }
+
+
+void START::BandsFactory::Change_N_ON(std::vector<Band> &BandArray, double n_on) const {
+  for(unsigned int iband(0); iband<BandArray.size(); iband++) {
+    
+    for(unsigned int ibin(0); ibin<BandArray[iband].ebin.size(); ibin++) {
+
+      BandArray[iband].ebin[ibin].SetOn(n_on);
+	
+    }
+
+  }
+
+}  
+  
