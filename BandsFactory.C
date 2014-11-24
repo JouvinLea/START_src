@@ -76,7 +76,7 @@ fConfig=0;
 							    * \param vector of bands
 							    */
 							   int START::BandsFactory::MakeBands(std::vector<Band> &BandArray)
-							   {
+{
 BandArray.clear(); // JLK un minimum quand meme...
   
 gROOT->Reset();
@@ -915,9 +915,10 @@ WARNING << "Run "<<fRunList[irun]
  for (std::vector<Band>::iterator it_band = BandArray.begin(); it_band!=BandArray.end();++it_band) {
    it_band->UpdateNameAndTitle(); // Put the correct name for each band !
  }
- return 1; 
 
-							   }
+ return 1; 
+							   							   
+}
 
 /**
  * \brief Check if there is at least one accepeted band. Return true if there 
@@ -1110,6 +1111,7 @@ void START::BandsFactory::PrintBands(const std::vector<Band> &BandArray) const {
 
 }
 
+
 /** AL : Reproj the band Array in Zen,alpha,theta,ect....
  *\ for very low statistics
  */
@@ -1117,7 +1119,7 @@ void START::BandsFactory::PrintBands(const std::vector<Band> &BandArray) const {
 void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TString, std::vector<int> > &InfoReprojArray,bool LowStat,bool VeryLowStat)const
 {
 
- std::cout<<" *************Fill BandInfo and repro !  "<<std::endl;
+ std::cout<<" *************Fill BandInfo and reproj !  "<<std::endl;
 
   //It should be optimized for a dataset
   //double Eff_max=100;
@@ -1134,7 +1136,7 @@ void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TSt
 
   //G0P1 -BG1 (400 excess):
   double Zen_max=1;//0deg
-  double Zen_min=0.34;//70deg -> 0.66 
+  double Zen_min=0.34;//70deg -> tot interval = 0.66 
   int Zen_bin=30;
   double Zen_bin_size=0.022;
 
@@ -1145,35 +1147,24 @@ void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TSt
  
   
 
-
-
   if(LowStat){
     std::cout<<"Low Stat !!!  -> LARGE BANDS !!!! "<<std::endl;
-    
-    
+       
       
     Eff_bin=20;
     Eff_bin_size=5;
     
 
-    //Zen_bin=20;
-    //Zen_bin_size=0.033;
-
-    //Zen_bin=15;
-    //Zen_bin_size=0.044;
-
     Zen_bin=12;
     Zen_bin_size=0.055;
  
-
-    //theta_bin=10;
-    //theta_bin_size=0.25;
 
     theta_bin=5;
     theta_bin_size=0.5;
 
 
   }
+
   if(VeryLowStat){
     std::cout<<"VEry Low Stat !!!  -> VERY LARGE BANDS !!!! "<<std::endl;
        
@@ -1189,10 +1180,7 @@ void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TSt
     theta_bin=5;
     theta_bin_size=0.5;
 
-
   }
-  
- 
   
   int z_out=0.;
   int e_out=0.;
@@ -1204,11 +1192,13 @@ void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TSt
   for(std::vector<Band>::const_iterator band=BandArray.begin(); band!=BandArray.end(); ++band) 
     //for(int iband=0; iband< BandArray.size();iband++)
     {
-      //if(band->GetKeepBand()==0)
-      //{
-      //  std::cout<<"Band->GetKeepBand is false !   NbRun =  "<<band->GetNbRun() <<"   AlphaRun = "<<band->GetAlphaRun()<<std::endl;
-      //  continue;
-      //}
+
+      //commente car ca risque de decaller les indices it pour se reperer dans Bandarray
+      //   if(band->GetKeepBand()==0)
+      // 	{
+      //	  std::cout<<"Band->GetKeepBand is false !   NbRun =  "<<band->GetNbRun() <<"   AlphaRun = "<<band->GetAlphaRun()<<std::endl;
+      //	  continue;
+      //	}
       
       //      std::cout<<"band = "<<band<<"entier it = "<<it<<std::endl;
       
@@ -1251,6 +1241,7 @@ void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TSt
 	}
 
 
+	
      
       std::map<TString, std::vector<int> >::iterator im;
       
@@ -1277,16 +1268,19 @@ void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TSt
       it++;
     }
   
-  //Check if infoArray is well filed :
-   std::cout<<"InfoReprojArray.size() = "<<InfoReprojArray.size() <<"   it = "<<it <<std::endl;
+  //Check if infoArray is ok:
+  std::cout<<"InfoReprojArray.size() = "<<InfoReprojArray.size() <<"   it = "<<it <<std::endl;
   for( std::map<TString, std::vector<int> >::iterator in =InfoReprojArray.begin(); in !=InfoReprojArray.end(); ++in)
   {
-      std::cout<<"(*in).first = "<<(*in).first <<" taille du vecteur i  (*in).second.size()= "<<(*in).second.size() <<std::endl;
+     std::cout<<"(*in).first = "<<(*in).first <<" taille du vecteur i  (*in).second.size()= "<<(*in).second.size() <<std::endl;
       for(int n=0;n<(*in).second.size();n++)
-     	std::cout<<"  element "<<n<<" du vecteur in :  = "<<(*in).second[n]<<std::endl; 
-   }
-  
+    	std::cout<<"  element "<<n<<" du vecteur in :  = "<<(*in).second[n]<<std::endl; 
+  }
+
+
+ 
 }
+
 
 
 void START::BandsFactory::ReprojBands(std::vector<Band> &BandArray,std::map<TString, std::vector<int> > &InfoReprojArray, std::vector<Band> &ReprojArray)
@@ -1295,13 +1289,13 @@ void START::BandsFactory::ReprojBands(std::vector<Band> &BandArray,std::map<TStr
   //loop on InfoReprojArray keys
   for(std::map<TString, std::vector<int> > ::iterator i=InfoReprojArray.begin(); i!=InfoReprojArray.end(); i++) 
     {
-      //std::cout<<" ***************************************** bande numero : "<<nband <<std::endl;
+      //std::cout<<" ***************************************** bande numero : "<<nband <<std::endl;  
       Band *InterBand = new Band(BandArray[0]);
       InterBand->ClearBandInfo();
-      
+  
       InterBand->AddInfoFromSelectedBands(BandArray,(*i).second,false);
-     
 
+      
       if((InterBand->GetNbRun()) !=0)
 	{
 	  InterBand->Print();
@@ -1311,18 +1305,148 @@ void START::BandsFactory::ReprojBands(std::vector<Band> &BandArray,std::map<TStr
       delete InterBand;
       InterBand=0;
       nband++;
-
-    } 
-  //std::cout<<" **************************************************************************************Check Reproj Array now  -> ReprojArray.size() = " <<ReprojArray.size() <<std::endl;
-    for(int p=0;p != ReprojArray.size();p++)
+      
+    }  
+  std::cout<<" **************************************************************************************Check Reproj Array now  -> ReprojArray.size() = " <<ReprojArray.size() <<std::endl;
+  for(int p=0;p != ReprojArray.size();p++)
     {
       ReprojArray[p].Print();
-   
+      
     }
 }
 
+void START::BandsFactory::RebinEnergy(const std::vector<Band> &BandArray, std::vector<Band> &BandRebinArray, double sigrebin,double MinE) {
+ 
+  //BandRebinArray is a copy of BandArray
+  //Then we clear its Ebin
+  //Then we copy the rebinned Energy bins for Each Band of the Array
 
 
+  std::cout<<" ********* Entering RebinEnergy function ************ "<<std::endl;
+
+
+  // Sanity check
+    if (BandArray.size()==0) {
+      WARNING << "Can't rebin anything since the bandarray has no size" << std::endl;
+      return;
+    }
+
+    Band *SummaryBand = new Band(BandArray[0]);
+    SummaryBand->ClearBandInfo();
+    SummaryBand->AddInfoFromBands(BandArray,false);
+
+   
+    Band *BandSummaryRebin = new Band(*SummaryBand);
+    BandSummaryRebin->ebin.clear();
+
+    for (unsigned int iband=0;iband<BandArray.size();++iband)
+      BandRebinArray.push_back(BandArray[iband]);
+    
+    for (unsigned int iband=0;iband<BandArray.size();++iband)
+      BandRebinArray[iband].ebin.clear(); 
+    
+   
+    //Rebin BandSummaryRebin first
+    
+    int bin_first=0;
+    int bin_second=0;
+
+  
+
+    while (bin_first<(int)SummaryBand->ebin.size()) {
+
+      //std::cout<<"loop over energy bin : ibin = "<< bin_first<<std::endl;
+      
+      if (SummaryBand->ebin[bin_first].GetKeepBin()==0) {
+	++bin_first;
+	//std::cout<<" --> dont keep bin "<<std::endl;
+	continue;
+      }
+
+
+    int bin1=bin_first;
+    while (bin1<(int)SummaryBand->ebin.size())
+      {
+	if(SummaryBand->ebin[bin1].GetKeepBin()==1) 
+	  ++bin1;
+	else
+	  break;
+      }
+
+    //std::cout<<"bin max with 1 = "<<bin1 <<std::endl;
+
+      double sig=-1;
+      
+      EnergyBin RegroupBin = EnergyBin();
+      RegroupBin.SetEmin( SummaryBand->ebin[bin_first].GetEmin() );
+      RegroupBin.SetKeepBin(1);
+      
+      std::vector<EnergyBin> RegroupBin_Array;
+      for (unsigned int iband=0;iband<BandArray.size();++iband) 
+	{ 
+	  RegroupBin_Array.push_back(EnergyBin());
+	  RegroupBin_Array[iband].SetEmin(BandArray[iband].ebin[bin_first].GetEmin() );
+	  RegroupBin_Array[iband].SetKeepBin(1);
+	}
+      
+      bin_second = bin_first;
+   
+      
+      while(( sig<sigrebin && bin_second<(int)SummaryBand->ebin.size() && SummaryBand->ebin[bin_second].GetKeepBin()!=0)||(bin_second<(int)SummaryBand->ebin.size()&& (bin1 - bin_second)<(bin_second - bin_first)&& SummaryBand->ebin[bin_second].GetKeepBin()!=0)) {	
+	//std::cout<<" sig  = "<<sig <<" for a sig threshold of : "<<sigrebin <<"-->  bin_first = "<< bin_first<<"    bin_second = "<<bin_second <<std::endl;
+	
+
+	RegroupBin.AddInfoFromEBin(SummaryBand->ebin[bin_second]);
+	RegroupBin.SetEmax(SummaryBand->ebin[bin_second].GetEmax());
+	
+	for (unsigned int iband=0;iband<BandArray.size();++iband){ 
+	  RegroupBin_Array[iband].AddInfoFromEBin(BandArray[iband].ebin[bin_second]);
+	  RegroupBin_Array[iband].SetEmax(BandArray[iband].ebin[bin_second].GetEmax());
+	}
+	
+	if (RegroupBin.GetAlpha()!=0) {
+	  sig = STARTUtils::LiMaSignificance(int(RegroupBin.GetOn()),int(RegroupBin.GetOff()),RegroupBin.GetAlpha());
+	}
+	else {
+	  sig=0.;
+	}
+	//std::cout<<"in the loop : sig for the new bin is = "<<sig  <<" sigma"<<std::endl;
+	
+	++bin_second;
+
+	//no rebin before 5 TeV 
+	if((SummaryBand->ebin[bin_second].GetEmin())<MinE && bin_second!=bin_first)
+	  break;
+      }
+      
+      // VIM : We complete the information of the bin (emid and emean), then we add this bin to the Band.
+      RegroupBin.SetEmid();
+      double emean_bin =RegroupBin.GetEmid();
+      RegroupBin.SetEmean(emean_bin);
+      BandSummaryRebin->ebin.push_back(RegroupBin);
+      
+      
+      for (unsigned int iband=0;iband<BandArray.size();++iband) { 
+	RegroupBin_Array[iband].SetEmid();
+	double Emean=RegroupBin_Array[iband].GetEmid();
+	//std::cout<<"iband = "<<iband<<"   Emean = "<<Emean <<std::endl;
+	RegroupBin_Array[iband].SetEmean(Emean);
+	BandRebinArray[iband].ebin.push_back(RegroupBin_Array[iband]); 
+      }
+      
+      bin_first = bin_second;
+    }
+    
+    BandSummaryRebin->SetKeepBand(1);
+    for (unsigned int iband=0;iband<BandArray.size();++iband) { 
+      BandRebinArray[iband].SetKeepBand(1);
+      //std::cout<<"BandRebinArray[iband].ebin.size()"<<BandRebinArray[iband].ebin.size() <<std::endl;
+    }
+    
+    
+}
+
+ 
 /**
  * \brief Print information of bands such as ON, OFF, exess, time... in one band
  * \param BandArray vector of band
@@ -1384,18 +1508,3 @@ bool START::BandsFactory::CheckIfEntireRunIncludedInSingleTimeWindow(double Time
 
   return IsIncluded;
 }
-
-void START::BandsFactory::Change_N_ON(std::vector<Band> &BandArray, double n_on) const {
-  for(unsigned int iband(0); iband<BandArray.size(); iband++) {
-    
-    for(unsigned int ibin(0); ibin<BandArray[iband].ebin.size(); ibin++) {
-
-      BandArray[iband].ebin[ibin].SetOn(n_on);
-	
-    }
-
-  }
-
-}  
-  
-
