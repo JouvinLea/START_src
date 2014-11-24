@@ -20,58 +20,51 @@
 #include "Band.hh"
 #include "Hypothesis.hh"
 #include "BandsFactory.hh"
-#include "check_fit.hh"
+#include "CheckFit_MC.hh"
 // Utilities
 #define DEBUG 0
 #include "debugging.hh"
 
 
 //Constructor
-START::CheckFit::CheckFit(BandsFactory &BandsFact ,std::vector<Band> &BandArray, Hypothesis &hypo):trandom()
+START::CheckFit_MC::CheckFit_MC(BandsFactory &BandsFact ,std::vector<Band> &BandArray, Hypothesis &hypo):trandom()
 {
   //Initialize the N_On of the array to O
   double n_on=0.;
   BandsFact.Change_N_ON(BandArray,n_on);
-  //fBandArray = BandArray;
+  
 
-  //An object hypothesis that contains the parameter of the fit
+  //An object hypothesis that contains the fittedparameter of the fit obtained with Starfit
   fHypothesis = &hypo;
 
-  //An object Comput Result in order use the method FunctionExpectedExcess
+  //An object Comput Result in order to use the method FunctionExpectedExcess
   fCompRes = new ComputeResults(BandArray,*fHypothesis);
 }
 
-START::CheckFit::~CheckFit(){
+START::CheckFit_MC::~CheckFit_MC(){
   if (fCompRes!=0) delete fCompRes;
   fCompRes = 0;
 }
 
-void START::CheckFit::add_N_On(std::vector<Band> &BandArray)
+void START::CheckFit_MC::N_On_MC(std::vector<Band> &BandArray)
  { 
    double mean_signal, mean_background;
    double On_mean, On;
-   //std:: cout << fHypothesis->GetFittedParameters()[0] <<std::endl;
-   //std:: cout << fHypothesis->GetFittedParameters()[1] <<std::endl;
    for(unsigned int iband(0); iband<BandArray.size(); iband++) {
     
      for(unsigned int ibin(0); ibin<BandArray[iband].ebin.size(); ibin++) {
-       // functionexpectedexcess attend des pointeurs pour les bandes et l energie, il faut donc lui passer fbandArray par reference
-       //std:: cout << "phi0 =" << fHypothesis->GetFittedParameters()[0] << std::endl;
-       //std:: cout << "gamma =" <<fHypothesis->GetFittedParameters()[1] << std::endl;
+       
+       //mean signal: calculated with the FunctionExpectedExcess from ComputeResult
        mean_signal=fCompRes->FunctionExpectedExcess(&BandArray[iband],&BandArray[iband].ebin[ibin],fHypothesis->GetFittedParameters(), -1, -1);
-       //std:: cout << "mean_signal = " << mean_signal << std::endl ;
+       // the background of the ON is calculated by using the formula alpha_iband *N_OFF
        mean_background=BandArray[iband].GetAlphaRun()*BandArray[iband].ebin[ibin].GetOff();
-       //std:: cout << "background OFF = " << BandArray[iband].ebin[ibin].GetOff() << std::endl ;
-       //std:: cout << "alpha run = " << BandArray[iband].GetAlphaRun() << std::endl ;
-       //std:: cout << "mean_background = " << mean_background << std::endl ;
        On_mean= mean_signal + mean_background;
-       //std:: cout << "On_mean = " << On_mean << std::endl;
+       //the number of events in the ON is calculated with a poisonnian distribution.(Poisson(On_mean)= Poisson(mean_signal) + Poisson(mean_background)
        On = trandom.Poisson(On_mean);
-       //std:: cout << "On = " << On << std::endl;
+       //Fill de On of the object mydata by the previous value of ON
        BandArray[iband].ebin[ibin].SetOn(On);
        
      }
      
    }
  }
-//Ensuite faire un fit avec ces donnees. J ai pas compris si la fonction de minimizefactory ou on pouvait donner les donnees du fit a l avance nous sert la. Je pense que c etait peut etre que dans la class hypothesis on peut creeer un tableau qui nous sert vec les donnees gamma et phi 0 qui nous sert avant pour calculer l expected excess. 
