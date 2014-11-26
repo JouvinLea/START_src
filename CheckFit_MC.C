@@ -51,9 +51,10 @@ void START::CheckFit_MC::N_On_MC(std::vector<Band> &BandArray)
    double mean_signal, mean_background;
    double On_mean, On;
    for(unsigned int iband(0); iband<BandArray.size(); iband++) {
-    
+     std::cout << BandArray.size() << std::endl;
+     if(BandArray[iband].GetKeepBand()==0) continue; // We are interested only in the selected bands
      for(unsigned int ibin(0); ibin<BandArray[iband].ebin.size(); ibin++) {
-       
+       if (BandArray[iband].ebin[ibin].GetKeepBin()==0) continue;// skip energy bins below threshold
        //mean signal: calculated with the FunctionExpectedExcess from ComputeResult
        mean_signal=fCompRes->FunctionExpectedExcess(&BandArray[iband],&BandArray[iband].ebin[ibin],fHypothesis->GetFittedParameters(), -1, -1);
        // the background of the ON is calculated by using the formula alpha_iband *N_OFF
