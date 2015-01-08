@@ -210,28 +210,35 @@ void START::MinimizeFactory::MakeMinimization(std::vector<Band> const &BandArray
 
     PrintResultsAndAddInfosInHypothesis(*(*hypo).first,MinimumFromMINUIT2,CovFromMINUIT2,TimeFromROOT);
     delete FCN; FCN=0;
-    if(!(*hypo).first->GetIsMinimumValid() || !(*hypo).first->GetIsCovarianceValid() || !(*hypo).first->GetAreFittedParametersValid())
+    if(!(*hypo).first->GetIsMinimumValid() || !(*hypo).first->GetIsCovarianceValid() || !(*hypo).first->GetAreFittedParametersValid()){
+      delete (*hypo).second;
       continue;
+    }
 
     if((*hypo).first->GetSpectralType()==Hypothesis::Differential) {
 
       switch(fMinimizationType) {
       case Light:
+	delete (*hypo).second;
 	break;
       case Medium:
 	ComputeIntegratedFlux(BandArray,*(*hypo).first);
 	ComputeEnergyFlux(BandArray,*(*hypo).first);
+	delete (*hypo).second;
 	break;
       case Full:
 	ComputeMinosErrors(BandArray,*(*hypo).first,*(*hypo).second);
 	ComputeIntegratedFlux(BandArray,*(*hypo).first);
 	ComputeEnergyFlux(BandArray,*(*hypo).first);
+	delete (*hypo).second;
 	break;
       case Standard:
 	ComputeIntegratedFlux(BandArray,*(*hypo).first);
+	delete (*hypo).second;
 	break;
       case Minos:
 	ComputeMinosErrors(BandArray,*(*hypo).first,*(*hypo).second);
+	delete (*hypo).second;
       }
 
 
