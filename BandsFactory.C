@@ -1119,7 +1119,7 @@ void START::BandsFactory::PrintBands(const std::vector<Band> &BandArray) const {
 void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TString, std::vector<int> > &InfoReprojArray,bool LowStat,bool VeryLowStat)const
 {
 
- std::cout<<" *************Fill BandInfo and reproj !  "<<std::endl;
+  //std::cout<<" *************Fill BandInfo and reproj !  "<<std::endl;
 
   //It should be optimized for a dataset
   //double Eff_max=100;
@@ -1148,7 +1148,7 @@ void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TSt
   
 
   if(LowStat){
-    std::cout<<"Low Stat !!!  -> LARGE BANDS !!!! "<<std::endl;
+    //std::cout<<"Low Stat !!!  -> LARGE BANDS !!!! "<<std::endl;
        
       
     Eff_bin=20;
@@ -1166,7 +1166,7 @@ void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TSt
   }
 
   if(VeryLowStat){
-    std::cout<<"VEry Low Stat !!!  -> VERY LARGE BANDS !!!! "<<std::endl;
+    //std::cout<<"VEry Low Stat !!!  -> VERY LARGE BANDS !!!! "<<std::endl;
        
       
     Eff_bin=10;
@@ -1232,7 +1232,7 @@ void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TSt
 	for(int t=0;t<theta_bin;t++)  
 	{
 	  double Theta=theta_min+(theta_bin_size/2.0)+(t*theta_bin_size);
-	  std::cout<<" band->GetOffset() = "<<band->GetOffset() <<"   Theta = "<<Theta <<"   t = "<<t<<std::endl;
+	  //std::cout<<" band->GetOffset() = "<<band->GetOffset() <<"   Theta = "<<Theta <<"   t = "<<t<<std::endl;
 	  if((band->GetOffset()>(Theta -(theta_bin_size/2.0))) && (band->GetOffset()<(Theta +(theta_bin_size/2.0))))	
 	    { 
 	      t_out=t;
@@ -1248,7 +1248,7 @@ void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TSt
       std::ostringstream name;
       name << "Band_Eff" << e_out << "_CosZen" <<z_out << "_Offset" <<t_out  ;
 
-      std::cout<<"name = "<<name.str().c_str() <<"  band->GetEff() = "<<band->GetEff() <<"  band->GetZenON() = "<<band->GetZenON() <<"  band->GetOffset() = "<<band->GetOffset() <<std::endl;
+      //std::cout<<"name = "<<name.str().c_str() <<"  band->GetEff() = "<<band->GetEff() <<"  band->GetZenON() = "<<band->GetZenON() <<"  band->GetOffset() = "<<band->GetOffset() <<std::endl;
 
       TString key(name.str().c_str());
       im=InfoReprojArray.find(key);
@@ -1269,13 +1269,13 @@ void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TSt
     }
   
   //Check if infoArray is ok:
-  std::cout<<"InfoReprojArray.size() = "<<InfoReprojArray.size() <<"   it = "<<it <<std::endl;
-  for( std::map<TString, std::vector<int> >::iterator in =InfoReprojArray.begin(); in !=InfoReprojArray.end(); ++in)
+  //std::cout<<"InfoReprojArray.size() = "<<InfoReprojArray.size() <<"   it = "<<it <<std::endl;
+  /*for( std::map<TString, std::vector<int> >::iterator in =InfoReprojArray.begin(); in !=InfoReprojArray.end(); ++in)
   {
-     std::cout<<"(*in).first = "<<(*in).first <<" taille du vecteur i  (*in).second.size()= "<<(*in).second.size() <<std::endl;
+    //std::cout<<"(*in).first = "<<(*in).first <<" taille du vecteur i  (*in).second.size()= "<<(*in).second.size() <<std::endl;
       for(int n=0;n<(*in).second.size();n++)
-    	std::cout<<"  element "<<n<<" du vecteur in :  = "<<(*in).second[n]<<std::endl; 
-  }
+    	//std::cout<<"  element "<<n<<" du vecteur in :  = "<<(*in).second[n]<<std::endl; 
+	}*/
 
 
  
@@ -1298,7 +1298,7 @@ void START::BandsFactory::ReprojBands(std::vector<Band> &BandArray,std::map<TStr
       
       if((InterBand->GetNbRun()) !=0)
 	{
-	  InterBand->Print();
+	  //InterBand->Print();
 	  ReprojArray.push_back(*InterBand);
 	}
       
@@ -1307,12 +1307,12 @@ void START::BandsFactory::ReprojBands(std::vector<Band> &BandArray,std::map<TStr
       nband++;
       
     }  
-  std::cout<<" **************************************************************************************Check Reproj Array now  -> ReprojArray.size() = " <<ReprojArray.size() <<std::endl;
-  for(int p=0;p != ReprojArray.size();p++)
+  //std::cout<<" **************************************************************************************Check Reproj Array now  -> ReprojArray.size() = " <<ReprojArray.size() <<std::endl;
+  /*for(int p=0;p != ReprojArray.size();p++)
     {
       ReprojArray[p].Print();
       
-    }
+      }*/
 }
 
 void START::BandsFactory::RebinEnergy(const std::vector<Band> &BandArray, std::vector<Band> &BandRebinArray, double sigrebin,double MinE) {
@@ -1322,7 +1322,7 @@ void START::BandsFactory::RebinEnergy(const std::vector<Band> &BandArray, std::v
   //Then we copy the rebinned Energy bins for Each Band of the Array
 
 
-  std::cout<<" ********* Entering RebinEnergy function ************ "<<std::endl;
+  //std::cout<<" ********* Entering RebinEnergy function ************ "<<std::endl;
 
 
   // Sanity check
