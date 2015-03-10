@@ -1,4 +1,4 @@
- // STL
+// STL
 #include <iostream>
 #include <vector>
 
@@ -1116,7 +1116,7 @@ void START::BandsFactory::PrintBands(const std::vector<Band> &BandArray) const {
  *\ for very low statistics
  */
 
-void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TString, std::vector<int> > &InfoReprojArray,bool LowStat,bool VeryLowStat)const
+ void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TString, std::vector<int> > &InfoReprojArray,bool LowStat,bool VeryLowStat)const
 {
 
   //std::cout<<" *************Fill BandInfo and reproj !  "<<std::endl;
@@ -1187,7 +1187,7 @@ void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TSt
   int t_out=0.;
   
   
-
+  //it est accrementé de 1 a chaque run
   int it=0;
   for(std::vector<Band>::const_iterator band=BandArray.begin(); band!=BandArray.end(); ++band) 
     //for(int iband=0; iband< BandArray.size();iband++)
@@ -1244,17 +1244,19 @@ void START::BandsFactory::FillBandInfo(std::vector<Band> &BandArray,std::map<TSt
 	
      
       std::map<TString, std::vector<int> >::iterator im;
-      
+      //defini la key pour la map
       std::ostringstream name;
       name << "Band_Eff" << e_out << "_CosZen" <<z_out << "_Offset" <<t_out  ;
 
       //std::cout<<"name = "<<name.str().c_str() <<"  band->GetEff() = "<<band->GetEff() <<"  band->GetZenON() = "<<band->GetZenON() <<"  band->GetOffset() = "<<band->GetOffset() <<std::endl;
 
       TString key(name.str().c_str());
+      //Et ben la fonction map::find renvoie l'itérateur end() dans ce cas, end() qui renvoie un itérateur vers le dernier élément de la séquence
       im=InfoReprojArray.find(key);
       
    
-      
+      //si im est differend du .end() de Info reproj, il ajoute a la bande en eff,zen et offset deja existantes, le run. pusk back ajoute une ligne au vector avec le nombre=numero du run a ajoute dans la bande.
+      //sinon si c'est egal au dernier element de Inforeproj, il cree une nouvelle key string associee au nom de la abnde en eff,zen et off qui n existait pas encore avant et lui attribue le numero dun run 
       if(im!=InfoReprojArray.end())
 	{
 	  if(it>0)
