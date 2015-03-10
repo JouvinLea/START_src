@@ -1128,7 +1128,8 @@ void START::BandsFactory::PrintBands(const std::vector<Band> &BandArray) const {
   //double Eff_bin_size=5.0;
 
  //G0p1 - BG1 
-  double Eff_max=100;
+ 
+  /* double Eff_max=100;
   double Eff_min=0;
   int Eff_bin=40;
   double Eff_bin_size=2.5;
@@ -1143,24 +1144,40 @@ void START::BandsFactory::PrintBands(const std::vector<Band> &BandArray) const {
   double theta_max=2.5;
   double theta_min=0;
   int theta_bin=25;
-  double theta_bin_size=0.1;
+  double theta_bin_size=0.1;*/
  
-  
+  //TEST LEA JOUVIN J1826 en dure
+  double Eff_max=70;
+  double Eff_min=48;
+  int Eff_bin=40;
+  double Eff_bin_size=(Eff_max-Eff_min)/Eff_bin;
+ 
+
+  //G0P1 -BG1 (400 excess):
+  double Zen_max=1;//0deg
+  double Zen_min=0.34;//70deg -> tot interval = 0.66 
+  int Zen_bin=30;
+  double Zen_bin_size=(Zen_max-Zen_min)/Zen_bin;
+
+  double theta_max=2.2;
+  double theta_min=0.6;
+  int theta_bin=25;
+  double theta_bin_size=(theta_max-theta_min)/theta_bin;
 
   if(LowStat){
     //std::cout<<"Low Stat !!!  -> LARGE BANDS !!!! "<<std::endl;
        
       
     Eff_bin=20;
-    Eff_bin_size=5;
+    Eff_bin_size=(Eff_max-Eff_min)/Eff_bin;
     
 
     Zen_bin=12;
-    Zen_bin_size=0.055;
+    Zen_bin_size=(Zen_max-Zen_min)/Zen_bin;
  
 
     theta_bin=5;
-    theta_bin_size=0.5;
+    theta_bin_size=(theta_max-theta_min)/theta_bin;
 
 
   }
@@ -1170,15 +1187,15 @@ void START::BandsFactory::PrintBands(const std::vector<Band> &BandArray) const {
        
       
     Eff_bin=10;
-    Eff_bin_size=10;
+    Eff_bin_size=(Eff_max-Eff_min)/Eff_bin;
     
 
     Zen_bin=10;
-    Zen_bin_size=0.066;
+    Zen_bin_size=(Zen_max-Zen_min)/Zen_bin;
  
 
     theta_bin=5;
-    theta_bin_size=0.5;
+    theta_bin_size=(theta_max-theta_min)/theta_bin;
 
   }
   
