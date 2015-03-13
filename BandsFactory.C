@@ -1147,7 +1147,29 @@ void START::BandsFactory::PrintBands(const std::vector<Band> &BandArray) const {
   double theta_bin_size=0.1;*/
  
   //TEST LEA JOUVIN J1826 en dure
-  double Eff_max=70;
+  /*int i=0;
+  double Eff_min,Eff_max,Zen_min,Zen_max,theta_max,theta_min;
+  for(std::vector<Band>::const_iterator band=BandArray.begin(); band!=BandArray.end(); ++band) 
+    //for(int iband=0; iband< BandArray.size();iband++)
+    {
+      if(i==0){
+	//On met les boudaries des band=a ceux de la premiere band lu et ensuite on fera test pour voir si les autre runs ont des limites plus grande
+	Eff_min=band->GetEff();
+	Eff_max=band->GetEff();
+	Zen_min=band-> GetZenON();
+	Zen_max=band-> GetZenON();
+	theta_min= band-> GetOffset();
+        theta_max= band-> GetOffset();
+      }
+      if(band->GetEff() < Eff_min) Eff_min=band->GetEff();
+      if(band->GetEff() > Eff_max) Eff_max=band->GetEff();
+      if(band->GetZenON() < Zen_min) Zen_min=band-> GetZenON();
+      if(band->GetZenON() > Zen_max) Zen_max=band-> GetZenON();
+      if(band->GetOffset() < theta_min) theta_min= band-> GetOffset();
+      if(band->GetOffset() > theta_max) theta_max= band-> GetOffset();
+      i++;
+      }*/
+  /*double Eff_max=70;
   double Eff_min=48;
   int Eff_bin=40;
   double Eff_bin_size=(Eff_max-Eff_min)/Eff_bin;
@@ -1161,6 +1183,22 @@ void START::BandsFactory::PrintBands(const std::vector<Band> &BandArray) const {
 
   double theta_max=2.2;
   double theta_min=0.6;
+  int theta_bin=25;
+  double theta_bin_size=(theta_max-theta_min)/theta_bin;*/
+  double Eff_max=100;
+  double Eff_min=0;
+  int Eff_bin=40;
+  double Eff_bin_size=(Eff_max-Eff_min)/Eff_bin;
+ 
+
+  //G0P1 -BG1 (400 excess):
+  double Zen_max=1;//0deg
+  double Zen_min=0.34;//70deg -> tot interval = 0.66 
+  int Zen_bin=30;
+  double Zen_bin_size=(Zen_max-Zen_min)/Zen_bin;
+
+  double theta_max=2.5;
+  double theta_min=0;
   int theta_bin=25;
   double theta_bin_size=(theta_max-theta_min)/theta_bin;
 
