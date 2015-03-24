@@ -17,7 +17,7 @@
 #include "MonteCarlo.hh"
 #include "STARTUtils.hh"
 #include "Event.hh"
-
+#include "ComputeResults.hh"
 // Utilities
 #define DEBUG 0
 #include "debugging.hh"
@@ -1340,7 +1340,7 @@ void START::BandsFactory::PrintBands(const std::vector<Band> &BandArray) const {
 
 
 
-void START::BandsFactory::ReprojBands(std::vector<Band> &BandArray,std::map<TString, std::vector<int> > &InfoReprojArray, std::vector<Band> &ReprojArray)
+void START::BandsFactory::ReprojBands(std::vector<Band> &BandArray,std::map<TString, std::vector<int> > &InfoReprojArray, std::vector<Band> &ReprojArray,TString configname)
 {
   int nband=0;
   //loop on InfoReprojArray keys
@@ -1349,8 +1349,9 @@ void START::BandsFactory::ReprojBands(std::vector<Band> &BandArray,std::map<TStr
       //std::cout<<" ***************************************** bande numero : "<<nband <<std::endl;  
       Band *InterBand = new Band(BandArray[0]);
       InterBand->ClearBandInfo();
-  
-      InterBand->AddInfoFromSelectedBands(BandArray,(*i).second,false);
+      std::cout << "avant selected band" << std::endl;
+      InterBand->AddInfoFromSelectedBands(BandArray,(*i).second,configname,false);
+      std::cout <<"aprs selected band" << std::endl;
 
       
       if((InterBand->GetNbRun()) !=0)
@@ -1364,6 +1365,35 @@ void START::BandsFactory::ReprojBands(std::vector<Band> &BandArray,std::map<TStr
       nband++;
       
     }  
+  std::cout << "avant copyinterpolator in band" << std::endl;
+  for (std::vector<Band>::iterator iband=ReprojArray.begin(); iband!=ReprojArray.end();++iband) {
+    iband->SetGSLInterpolatorForArea(iband->GetVectorEnergy(),iband->GetVectorArea());
+    iband->SetGSLInterpolatorForBiais(iband->GetVectorEnergy(),iband->GetVectorBiais());
+    iband->SetGSLInterpolatorForResolution(iband->GetVectorEnergy(),iband->GetVectorResolution());
+    if (configname.Contains("thsq64")) {
+      iband->InitDistributionInterpTable();
+    }
+  }
+  std::cout <<"apres copyinterpolator in band" << std::endl;
+  ComputeResults *CompRes = new ComputeResults(ReprojArray);
+  std::cout << "avant makepartialintegrand" << std::endl;
+  if(CompRes->MakeVectorPartialIntegral(ReprojArray)==-1) {
+    WARNING << "Copying effective resolution in Bins... FAILED" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  else {
+    INFO << "Copying effective resolution in Bins... ok" << std::endl;
+  }
+  std::cout << "apres makepartialintegrand" << std::endl;
+  delete CompRes;
+  std::cout <<"avant copyinterpolator in bin" << std::endl;
+  for (std::vector<Band>::iterator iband=ReprojArray.begin(); iband!=ReprojArray.end();++iband) {
+    for (std::vector<EnergyBin>::iterator iener = (iband->ebin).begin(); iener!= (iband->ebin).end(); ++iener) {
+      iener->SetGSLInterpolatorForPartialIntegral(iener->GetPartialIntegral());
+    }
+  }
+  std::cout <<"apres copyinterpolator in bin" << std::endl;
+
   //std::cout<<" **************************************************************************************Check Reproj Array now  -> ReprojArray.size() = " <<ReprojArray.size() <<std::endl;
   /*for(int p=0;p != ReprojArray.size();p++)
     {

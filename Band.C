@@ -11,6 +11,7 @@
 // START
 #include "STARTUtils.hh"
 #include "Band.hh"
+#include "MonteCarlo.hh"
 
 // Utilities
 #define DEBUG 0
@@ -685,7 +686,7 @@ void START::Band::ClearBandInfo() {
 
 
 //AL : modified function :
-void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,const std::vector<int> &BandList,bool IsUseEthresh) 
+void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,const std::vector<int> &BandList,TString configname,bool IsUseEthresh) 
 {
 
   if(VecBand.size()==0) {
@@ -745,7 +746,8 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
   
   
   // Computation of the global parameter for the summary :
-
+  MonteCarlo MC;
+  std::vector<double>  enMC = MC.GetEnergy();
   int nrun_add = 0;
   double alpha_total_mean =0.;
   double alpha_total_mean_backup = 0.;
@@ -756,6 +758,11 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
   double meanefficiency=0;
   double meanoffset=0;
   double meanehtresh=0.;
+  std::vector<double> energy_MC, smooth_energy_MC;
+  std::vector<double> meanarea, meansmooth_area, meanresol ,meansmooth_resol, meansmooth_biais, meanbiais;
+  std::map<double,std::pair< std::vector<double>,std::vector<double> > > MeanDistributionInstrumentMapTable; 
+  std::map<double,std::pair< std::vector<double>,std::vector<double> > > DistributionInstrumentMapTable; 
+
 
   alpha_total_mean = GetAlphaRun()*GetNOffTot(IsUseEthresh);
   alpha_total_mean_backup = GetAlphaRun()*GetLiveTime();
@@ -768,19 +775,84 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
   meanefficiency+=(GetEff()*GetLiveTime());
   meanoffset+=(GetOffset()*GetLiveTime());
   meanehtresh+=(GetEthMC()*GetLiveTime());
-  
+  //Nous on sait que 'on donne un vecteur de bande dont on a fait clearbandinfo donc nul. du coup ca sert a rien de calculer une premiere fois pour tout ces parametres.
+  //Pr la moyenne sur les fonctions d instruments
+  /*energy_MC=GetVectorEnergy();
+  smooth_energy_MC=GetVectorInterEnergy();
+  //TROUVER COMMENT MULTIPLIER PAR UN GETLIVE TIME sans faire de boucle
+  meanarea=GetVectorArea();
+  meansmooth_area=GetVectorInterArea();
+  meanresol= GetVectorResolution();
+  meansmooth_resol=GetVectorInterResolution();
+  meansmooth_biais=GetVectorBiais();
+  meanbiais=GetVectorInterBiais();
+  for(int i=0; i<  energy_MC.size(),i++){
+    meanarea[i]=meanarea[i]*GetLiveTime();    
+    meanresol[i]= meanresol[i]*GetLiveTime();
+    meanbiais[i]=meanbiais[i]*GetLiveTime();
+  }
+  for(int j=0; j< smooth_energy_MC.size(),j++){    
+    meansmooth_area[j]=meansmooth_area[j]*GetLiveTime();
+    meansmooth_resol[j]=meansmooth_resol[j]*GetLiveTime();
+    meansmooth_biais[j]=meansmooth_biais[j]*GetLiveTime();
+    }
+    if (configname.Contains("thsq64")) {
+    for (std::vector<double>::iterator ien = enMC.begin();ien!=enMC.end();++ien)  {
+    std::pair< std::vector<double>,std::vector<double> >::iterator iband;
+    iband=MeanDistributionInstrumentMapTable.begin();
+    for (std::pair< std::vector<double>,std::vector<double> >::iterator irun = DistributionInstrumentMapTable.begin();irun!=DistributionInstrumentMapTable.end();++irun)  {
+    iband.second()=0;
+    iband.second()=iband.second()+irun.second()*GetLiveTime();
+    iband++;
+    }
+    }
+    }
 
+
+*/
   if (GetNOnTot(IsUseEthresh)!=0 || GetNOffTot(IsUseEthresh)!=0) { // In this case, we assume that this band is filled, and must be count
     ++nrun_add;
   }
-  
+  //iok permet de determiner le premier run de la list qui est ok et pour celui la on recupere le vetor energyui est le meme dans tous les autres
+  int iok=0;
   for(unsigned int it=0; it<BandList.size();it++){
     int ib=BandList[it];    
     std::vector<Band>::const_iterator itband = (VecBand.begin()+ib);
     if (itband->GetKeepBand()==0) {
       continue;
     }
+    std::cout << "1er run"<< std::endl;
+    DistributionInstrumentMapTable=itband->GetDistributionVectorTable();
+    if(iok==0) {
+      //vector energy egale dans tous les runs donc pour chaque bande on prend le vector enrgy du preier run de la liste
+      //VOIR SI OK car si GetKeepBand()==0 alors ca va jamais passer
+      energy_MC=itband->GetVectorEnergy();
+      smooth_energy_MC=itband->GetVectorInterEnergy();
+      MeanDistributionInstrumentMapTable=DistributionInstrumentMapTable;
+      meanarea.resize(energy_MC.size());      
+      meanresol.resize(energy_MC.size());
+      meanbiais.resize(energy_MC.size());
+      meansmooth_area.resize(smooth_energy_MC.size());
+      meansmooth_resol.resize(smooth_energy_MC.size());
+      meansmooth_biais.resize(smooth_energy_MC.size());
+      if (configname.Contains("thsq64")) {
+	std::cout <<"avant de mettre a zero les distrib" << std::endl;
+	std::cout <<"size des MCS" << enMC.size() <<std::endl;
+	for (std::vector<double>::iterator ien = enMC.begin();ien!=enMC.end();++ien)  {
+	  std::pair< std::vector<double>,std::vector<double> > &meanpair=MeanDistributionInstrumentMapTable[*ien];
+	  std::vector<double> &MeanmyVect=meanpair.second;
+	  std::fill(MeanmyVect.begin(), MeanmyVect.end(), 0);
+	  std::cout << "distrib a zero"  << std::endl;
+	  /*for (std::vector<double>::iterator iband = MeanmyVect.begin();iband!=MeanmyVect.end();++iband)  {	  
+	    *iband=0;
+	    
+	    }*/
+	}
+      }
+    }
+     
     
+    iok++;
     ++nrun_add;
     double noff = itband->GetNOffTot(IsUseEthresh);
     total_noff+=noff;
@@ -793,8 +865,39 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
     meanefficiency+=(itband->GetEff()*itband->GetLiveTime());
     meanoffset+=(itband->GetOffset()*itband->GetLiveTime());
     meanehtresh+=(itband->GetEthMC()*itband->GetLiveTime());
-
-  
+    
+    
+    //TROUVER COMMENT MULTIPLIER PAR UN GETLIVE TIME sans faire de boucle
+    for(int i=0; i<energy_MC.size();i++){
+      meanarea[i]=meanarea[i]+itband->GetVectorArea()[i]*itband->GetLiveTime();      
+      meanresol[i]= meanresol[i]+itband->GetVectorResolution()[i]*itband->GetLiveTime();
+      meanbiais[i]=meanbiais[i]+itband->GetVectorBiais()[i]*itband->GetLiveTime();
+    }
+    for(int j=0; j<smooth_energy_MC.size();j++){    
+      meansmooth_area[j]=meansmooth_area[j]+itband->GetVectorInterArea()[j]*itband->GetLiveTime();
+      meansmooth_resol[j]=meansmooth_resol[j]+itband->GetVectorInterResolution()[j]*itband->GetLiveTime();
+      meansmooth_biais[j]=meansmooth_biais[j]+itband->GetVectorInterBiais()[j]*itband->GetLiveTime();
+     }
+    if (configname.Contains("thsq64")) {
+      int iMC=0;
+      for (std::vector<double>::iterator ien = enMC.begin();ien!=enMC.end();++ien)  {
+	std::cout << "bon energy MC="<< iMC << std::endl;
+	std::cout << "avant de faire moyenne des dstrib"<< std::endl;
+	std::pair< std::vector<double>,std::vector<double> > &pair=DistributionInstrumentMapTable[*ien];
+	std::pair< std::vector<double>,std::vector<double> > &meanpair=MeanDistributionInstrumentMapTable[*ien];
+	std::vector<double> &myVect=pair.second;
+	std::vector<double> &MeanmyVect=meanpair.second;
+	std::vector<double>::iterator iband = MeanmyVect.begin();
+	iMC++;
+	for (std::vector<double>::iterator irun = myVect.begin();irun!=myVect.end();++irun)  {	  
+	  
+	  *iband=*iband+*irun*itband->GetLiveTime();
+	  iband++;
+	  std::cout << "apres avoir fait moyenne des distrib" << std::endl;
+	}
+      }
+    }
+    
   }
       
   //end of iteration : compute mean values :
@@ -809,6 +912,62 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
     meanefficiency=meanefficiency/total_time;
     meanoffset=meanoffset/total_time;
     meanehtresh=meanehtresh/total_time;
+   
+    for(int i=0; i<  energy_MC.size();i++){
+      meanarea[i]=meanarea[i]/total_time;      
+      meanresol[i]= meanresol[i]/total_time;
+      meanbiais[i]=meanbiais[i]/total_time;
+    }
+    for(int j=0; j< smooth_energy_MC.size();j++){    
+      meansmooth_area[j]=meansmooth_area[j]/total_time;
+      meansmooth_resol[j]=meansmooth_resol[j]/total_time;
+      meansmooth_biais[j]=meansmooth_biais[j]/total_time;
+     } 
+    if (configname.Contains("thsq64")) {
+      for (std::vector<double>::iterator ien = enMC.begin();ien!=enMC.end();++ien)  {
+	std::cout << "avant de diviser par total time"<< std::endl;
+	std::pair< std::vector<double>,std::vector<double> > &meanpair=MeanDistributionInstrumentMapTable[*ien];
+	std::vector<double> &MeanmyVect=meanpair.second;
+	for (std::vector<double>::iterator iband = MeanmyVect.begin();iband!=MeanmyVect.end();++iband)  {	  
+	  *iband=*iband/total_time;
+	  std::cout << "apres de diviser par total time"<< std::endl;
+	  
+	}
+      }
+    }
+    // Pour etre sur que les differentes distribution sont normalisees.
+    if (configname.Contains("thsq64")) {
+      for (std::vector<double>::iterator ien = enMC.begin();ien!=enMC.end();++ien)  {
+	std::cout << "avant de rnormaliser"<< std::endl;
+	std::pair< std::vector<double>,std::vector<double> > &meanpair=MeanDistributionInstrumentMapTable[*ien];
+	std::vector<double> &MeanmyVect_logEtrue_over_Ereco=meanpair.first;
+	std::vector<double> &MeanmyVect=meanpair.second;	
+	if(MeanmyVect_logEtrue_over_Ereco.size()!=0){
+	    ROOT::Math::Interpolator InterpolGen(MeanmyVect_logEtrue_over_Ereco,MeanmyVect,ROOT::Math::Interpolation::kLINEAR);
+	    std::cout << "Creation interpolator"<< std::endl;
+	    double integral_interpol_gen = InterpolGen.Integ(MeanmyVect_logEtrue_over_Ereco[0],MeanmyVect_logEtrue_over_Ereco[MeanmyVect_logEtrue_over_Ereco.size()-1]);
+	    std::cout << "calcul normalisaion"<< std::endl;	  
+	    for (std::vector<double>::iterator iband = MeanmyVect.begin();iband!=MeanmyVect.end();++iband) {	  
+	      *iband=*iband/integral_interpol_gen;
+	      std::cout << "calcul ajout normalisaion"<< std::endl;
+	    }
+	}
+      }
+    }
+   // Pour etre sur que les differentes distribution sont normalisees.
+    if (configname.Contains("thsq64")) {
+      for (std::vector<double>::iterator ien = enMC.begin();ien!=enMC.end();++ien)  {
+	std::pair< std::vector<double>,std::vector<double> > &meanpair=MeanDistributionInstrumentMapTable[*ien];
+	std::vector<double> &MeanmyVect_logEtrue_over_Ereco=meanpair.first;
+	std::vector<double> &MeanmyVect=meanpair.second;
+	if(MeanmyVect_logEtrue_over_Ereco.size()!=0){
+	  ROOT::Math::Interpolator InterpolGen(MeanmyVect_logEtrue_over_Ereco,MeanmyVect,ROOT::Math::Interpolation::kLINEAR);
+	  double integral_interpol_gen = InterpolGen.Integ(MeanmyVect_logEtrue_over_Ereco[0],MeanmyVect_logEtrue_over_Ereco[MeanmyVect_logEtrue_over_Ereco.size()-1]);
+	  std ::cout << "LEADEbug: pour energie MC="<< *ien << "lintegral des la distribution Etrue sur Ereco vaut:" <<integral_interpol_gen << std::endl;
+	}
+      }
+    } 
+      
   }
   
   // We fill the band : BE  CAREFULL, AFTER THOSE LINE, THE MEMBER OF THIS CLASS WILL BE CHANGE !!!!
@@ -821,13 +980,24 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
   SetLiveTime(total_time);
   SetNbRun(nrun_add);
   SetAlphaRun(alpha_total_mean); // VIM Be carefull to not call bellow the value GetAlphaRun(), we have modify it with the average value...
+  SetVectorEnergy(energy_MC);
+  SetVectorInterEnergy(smooth_energy_MC);
+  SetVectorArea(meanarea);
+  SetVectorInterArea(meansmooth_area);
+  SetVectorResolution(meanresol);
+  SetVectorInterResolution(meansmooth_resol);
+  SetVectorBiais(meanbiais);
+  SetVectorInterBiais(meansmooth_biais);
+  if (configname.Contains("thsq64")) {
+    SetDistributionVectorTable(MeanDistributionInstrumentMapTable);
+  }
   if (IsUseEthresh) {
     SetEthMC(meanehtresh);
   }
   else {
     SetEthMC(0.);
   }
-
+  
   // VIM Now we're going to stack the different energy bin
   
   for (unsigned int ibin = 0;ibin<ebin.size();++ibin) {
