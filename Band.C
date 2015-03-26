@@ -748,6 +748,10 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
   // Computation of the global parameter for the summary :
   MonteCarlo MC;
   std::vector<double>  enMC = MC.GetEnergy();
+  //std::cout << "sizeMC" << enMC.size() << std::endl;
+  //for(int itest=0; itest<enMC.size(); itest++){
+  //std::cout << enMC[itest] << std::endl;
+  //}
   int nrun_add = 0;
   double alpha_total_mean =0.;
   double alpha_total_mean_backup = 0.;
@@ -821,8 +825,9 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
     if (itband->GetKeepBand()==0) {
       continue;
     }
-    std::cout << "1er run"<< std::endl;
+    //std::cout << "1er run"<< std::endl;
     DistributionInstrumentMapTable=itband->GetDistributionVectorTable();
+    
     if(iok==0) {
       //vector energy egale dans tous les runs donc pour chaque bande on prend le vector enrgy du preier run de la liste
       //VOIR SI OK car si GetKeepBand()==0 alors ca va jamais passer
@@ -836,13 +841,18 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
       meansmooth_resol.resize(smooth_energy_MC.size());
       meansmooth_biais.resize(smooth_energy_MC.size());
       if (configname.Contains("thsq64")) {
-	std::cout <<"avant de mettre a zero les distrib" << std::endl;
-	std::cout <<"size des MCS" << enMC.size() <<std::endl;
-	for (std::vector<double>::iterator ien = enMC.begin();ien!=enMC.end();++ien)  {
-	  std::pair< std::vector<double>,std::vector<double> > &meanpair=MeanDistributionInstrumentMapTable[*ien];
-	  std::vector<double> &MeanmyVect=meanpair.second;
+	//std::cout <<"avant de mettre a zero les distrib" << std::endl;
+	//std::cout <<"size des MCS" << enMC.size() <<std::endl;
+	int iMC=0;
+	for (std::map< double, std::pair< std::vector<double> , std::vector<double> > >::iterator mapband = MeanDistributionInstrumentMapTable.begin(); mapband != MeanDistributionInstrumentMapTable.end();++mapband)   {
+	  //std::cout << "bin energy Mc"<< iMC <<std::endl;
+	  //std::cout << " energy Mc"<< mapband->first  <<std::endl;
+	  std::pair< std::vector<double>,std::vector<double> > &meanpair=mapband->second;	  
+	  std::vector<double> &MeanmyVect=meanpair.second;	  
+	  //std::cout << "meanmyvect.size(): " << MeanmyVect.size() << std::endl;
 	  std::fill(MeanmyVect.begin(), MeanmyVect.end(), 0);
-	  std::cout << "distrib a zero"  << std::endl;
+	  //std::cout << "distrib a zero"  << std::endl;
+	  iMC++;
 	  /*for (std::vector<double>::iterator iband = MeanmyVect.begin();iband!=MeanmyVect.end();++iband)  {	  
 	    *iband=0;
 	    
@@ -851,7 +861,17 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
       }
     }
      
-    
+    /*if (configname.Contains("thsq64")) {
+	for (std::map< double, std::pair< std::vector<double> , std::vector<double> > >::iterator mapband = MeanDistributionInstrumentMapTable.begin(); mapband != MeanDistributionInstrumentMapTable.end();++mapband)   {
+	  
+	  std::pair< std::vector<double>,std::vector<double> > &meanpair=mapband->second;	  
+	  std::vector<double> &MeanmyVect=meanpair.second;	  
+	  for (std::vector<double>::iterator iband = MeanmyVect.begin();iband!=MeanmyVect.end();++iband)  {
+	    std::cout<< *iband << std::endl;
+	  }	  
+	  
+	}
+	}*/
     iok++;
     ++nrun_add;
     double noff = itband->GetNOffTot(IsUseEthresh);
@@ -879,27 +899,54 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
       meansmooth_biais[j]=meansmooth_biais[j]+itband->GetVectorInterBiais()[j]*itband->GetLiveTime();
      }
     if (configname.Contains("thsq64")) {
-      int iMC=0;
-      for (std::vector<double>::iterator ien = enMC.begin();ien!=enMC.end();++ien)  {
-	std::cout << "bon energy MC="<< iMC << std::endl;
-	std::cout << "avant de faire moyenne des dstrib"<< std::endl;
-	std::pair< std::vector<double>,std::vector<double> > &pair=DistributionInstrumentMapTable[*ien];
-	std::pair< std::vector<double>,std::vector<double> > &meanpair=MeanDistributionInstrumentMapTable[*ien];
+      std::map< double, std::pair< std::vector<double> , std::vector<double> > >::iterator mapmeanband = MeanDistributionInstrumentMapTable.begin();
+      int itest=0;
+      if(DistributionInstrumentMapTable.begin()->first!=MeanDistributionInstrumentMapTable.begin()->first){
+	std::cout<< "emc.begin different"<< std::endl;
+      std::cout << "EMc meanmap= " << MeanDistributionInstrumentMapTable.begin()->first << std::endl;
+      std::cout << "Emc map= " << DistributionInstrumentMapTable.begin()->first << std::endl;
+      }
+      if( DistributionInstrumentMapTable.end()->first!=MeanDistributionInstrumentMapTable.end()->first){
+	std::cout<< "emc.end different"<< std::endl;
+	std::cout << "EMc meanmap= " << MeanDistributionInstrumentMapTable.end()->first << std::endl;
+	std::cout << "Emc map= " << DistributionInstrumentMapTable.end()->first << std::endl;
+      }     
+      for (std::map< double, std::pair< std::vector<double> , std::vector<double> > >::iterator maprun = DistributionInstrumentMapTable.begin(); maprun != DistributionInstrumentMapTable.end();++maprun)   {
+	if(itest==0 && DistributionInstrumentMapTable.begin()->first!=MeanDistributionInstrumentMapTable.begin()->first) maprun++;
+	
+	std::pair< std::vector<double>,std::vector<double> > &pair=maprun->second;
+	std::pair< std::vector<double>,std::vector<double> > &meanpair=mapmeanband->second;
+	//std::cout << "energy MC maprun"<< maprun->first << std::endl;
+	//std::cout << "energy MC mapband" << mapmeanband->first<< std::endl;
 	std::vector<double> &myVect=pair.second;
 	std::vector<double> &MeanmyVect=meanpair.second;
+	//std::cout << "myvect.size(): " << myVect.size() << std::endl;
+	//std::cout << "Meanmyvect.size(): " << MeanmyVect.size() << std::endl;
 	std::vector<double>::iterator iband = MeanmyVect.begin();
-	iMC++;
+	
 	for (std::vector<double>::iterator irun = myVect.begin();irun!=myVect.end();++irun)  {	  
 	  
 	  *iband=*iband+*irun*itband->GetLiveTime();
 	  iband++;
-	  std::cout << "apres avoir fait moyenne des distrib" << std::endl;
+	  //std::cout << "apres avoir fait moyenne des distrib" << std::endl;
 	}
+	mapmeanband++;
+	itest++;
       }
     }
-    
+    //std::cout << std::endl;
   }
+  /*if (configname.Contains("thsq64")) {
+    for (std::map< double, std::pair< std::vector<double> , std::vector<double> > >::iterator mapband = MeanDistributionInstrumentMapTable.begin(); mapband != MeanDistributionInstrumentMapTable.end();++mapband)   {
       
+      std::pair< std::vector<double>,std::vector<double> > &meanpair=mapband->second;	  
+      std::vector<double> &MeanmyVect=meanpair.second;	  
+      for (std::vector<double>::iterator iband = MeanmyVect.begin();iband!=MeanmyVect.end();++iband)  {
+	std::cout<< *iband << std::endl;
+      }	  
+      
+    }
+    }   */
   //end of iteration : compute mean values :
 
   if (total_noff) {alpha_total_mean=alpha_total_mean/total_noff;}
@@ -924,50 +971,68 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
       meansmooth_biais[j]=meansmooth_biais[j]/total_time;
      } 
     if (configname.Contains("thsq64")) {
-      for (std::vector<double>::iterator ien = enMC.begin();ien!=enMC.end();++ien)  {
-	std::cout << "avant de diviser par total time"<< std::endl;
-	std::pair< std::vector<double>,std::vector<double> > &meanpair=MeanDistributionInstrumentMapTable[*ien];
+      for (std::map< double, std::pair< std::vector<double> , std::vector<double> > >::iterator mapband = MeanDistributionInstrumentMapTable.begin(); mapband != MeanDistributionInstrumentMapTable.end();++mapband)    {
+	//std::cout << "avant de diviser par total time"<< std::endl;
+	std::pair< std::vector<double>,std::vector<double> > &meanpair=mapband->second;
 	std::vector<double> &MeanmyVect=meanpair.second;
 	for (std::vector<double>::iterator iband = MeanmyVect.begin();iband!=MeanmyVect.end();++iband)  {	  
 	  *iband=*iband/total_time;
-	  std::cout << "apres de diviser par total time"<< std::endl;
+	  //std::cout << "apres de diviser par total time"<< std::endl;
 	  
 	}
       }
     }
+    /*if (configname.Contains("thsq64")) {
+      for (std::map< double, std::pair< std::vector<double> , std::vector<double> > >::iterator mapband = MeanDistributionInstrumentMapTable.begin(); mapband != MeanDistributionInstrumentMapTable.end();++mapband)   {
+	
+	std::pair< std::vector<double>,std::vector<double> > &meanpair=mapband->second;	  
+	std::vector<double> &MeanmyVect=meanpair.second;	  
+	for (std::vector<double>::iterator iband = MeanmyVect.begin();iband!=MeanmyVect.end();++iband)  {
+	    std::cout<< *iband << std::endl;
+	}	  
+	  
+      }
+      }*/ 
     // Pour etre sur que les differentes distribution sont normalisees.
     if (configname.Contains("thsq64")) {
-      for (std::vector<double>::iterator ien = enMC.begin();ien!=enMC.end();++ien)  {
-	std::cout << "avant de rnormaliser"<< std::endl;
-	std::pair< std::vector<double>,std::vector<double> > &meanpair=MeanDistributionInstrumentMapTable[*ien];
+      for (std::map< double, std::pair< std::vector<double> , std::vector<double> > >::iterator mapband = MeanDistributionInstrumentMapTable.begin(); mapband != MeanDistributionInstrumentMapTable.end();++mapband)   {
+	//std::cout << "avant de rnormaliser"<< std::endl;
+	std::pair< std::vector<double>,std::vector<double> > &meanpair=mapband->second;
 	std::vector<double> &MeanmyVect_logEtrue_over_Ereco=meanpair.first;
 	std::vector<double> &MeanmyVect=meanpair.second;	
-	if(MeanmyVect_logEtrue_over_Ereco.size()!=0){
-	    ROOT::Math::Interpolator InterpolGen(MeanmyVect_logEtrue_over_Ereco,MeanmyVect,ROOT::Math::Interpolation::kLINEAR);
-	    std::cout << "Creation interpolator"<< std::endl;
-	    double integral_interpol_gen = InterpolGen.Integ(MeanmyVect_logEtrue_over_Ereco[0],MeanmyVect_logEtrue_over_Ereco[MeanmyVect_logEtrue_over_Ereco.size()-1]);
-	    std::cout << "calcul normalisaion"<< std::endl;	  
-	    for (std::vector<double>::iterator iband = MeanmyVect.begin();iband!=MeanmyVect.end();++iband) {	  
-	      *iband=*iband/integral_interpol_gen;
-	      std::cout << "calcul ajout normalisaion"<< std::endl;
-	    }
+	
+	ROOT::Math::Interpolator InterpolGen(MeanmyVect_logEtrue_over_Ereco,MeanmyVect,ROOT::Math::Interpolation::kLINEAR);
+	//std::cout << "Creation interpolator"<< std::endl;
+	double integral_interpol_gen = InterpolGen.Integ(MeanmyVect_logEtrue_over_Ereco[0],MeanmyVect_logEtrue_over_Ereco[MeanmyVect_logEtrue_over_Ereco.size()-1]);
+	//std::cout << "calcul normalisaion"<< std::endl;	  
+	for (std::vector<double>::iterator iband = MeanmyVect.begin();iband!=MeanmyVect.end();++iband) {	  
+	  *iband=*iband/integral_interpol_gen;
+	  //std::cout << "calcul ajout normalisaion"<< std::endl;
 	}
+	
       }
     }
-   // Pour etre sur que les differentes distribution sont normalisees.
+    // Pour etre sur que les differentes distribution sont normalisees.
+    double p=1;
     if (configname.Contains("thsq64")) {
-      for (std::vector<double>::iterator ien = enMC.begin();ien!=enMC.end();++ien)  {
-	std::pair< std::vector<double>,std::vector<double> > &meanpair=MeanDistributionInstrumentMapTable[*ien];
+      for (std::map< double, std::pair< std::vector<double> , std::vector<double> > >::iterator mapband = MeanDistributionInstrumentMapTable.begin(); mapband != MeanDistributionInstrumentMapTable.end();++mapband)   {
+	std::pair< std::vector<double>,std::vector<double> > &meanpair=mapband->second;
 	std::vector<double> &MeanmyVect_logEtrue_over_Ereco=meanpair.first;
 	std::vector<double> &MeanmyVect=meanpair.second;
-	if(MeanmyVect_logEtrue_over_Ereco.size()!=0){
-	  ROOT::Math::Interpolator InterpolGen(MeanmyVect_logEtrue_over_Ereco,MeanmyVect,ROOT::Math::Interpolation::kLINEAR);
-	  double integral_interpol_gen = InterpolGen.Integ(MeanmyVect_logEtrue_over_Ereco[0],MeanmyVect_logEtrue_over_Ereco[MeanmyVect_logEtrue_over_Ereco.size()-1]);
-	  std ::cout << "LEADEbug: pour energie MC="<< *ien << "lintegral des la distribution Etrue sur Ereco vaut:" <<integral_interpol_gen << std::endl;
-	}
+	
+	ROOT::Math::Interpolator InterpolGen(MeanmyVect_logEtrue_over_Ereco,MeanmyVect,ROOT::Math::Interpolation::kLINEAR);
+	double integral_interpol_gen = InterpolGen.Integ(MeanmyVect_logEtrue_over_Ereco[0],MeanmyVect_logEtrue_over_Ereco[MeanmyVect_logEtrue_over_Ereco.size()-1]);
+	//std::cout << integral_interpol_gen << std::endl;
+	//if(integral_interpol_gen!=p) 
+	//{
+	//std::cout << "integral differente de 1" << std::endl;
+	//  std::cout << integral_interpol_gen << std::endl;
+	//}
+	//std ::cout << "LEADEbug: pour energie MC="<< mapband->first << "lintegral des la distribution Etrue sur Ereco vaut:" <<integral_interpol_gen << std::endl;
       }
-    } 
       
+      } 
+    
   }
   
   // We fill the band : BE  CAREFULL, AFTER THOSE LINE, THE MEMBER OF THIS CLASS WILL BE CHANGE !!!!
