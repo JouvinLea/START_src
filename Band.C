@@ -758,6 +758,7 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
   double meanoffset=0;
   double meanehtresh=0.;
   std::vector<double> energy_MC, smooth_energy_MC;
+  std::vector<double> Meanenergy_MC, Meansmooth_energy_MC;
   std::vector<double> meanarea, meansmooth_area, meanresol ,meansmooth_resol, meansmooth_biais, meanbiais;
   std::map<double,std::pair< std::vector<double>,std::vector<double> > > MeanDistributionInstrumentMapTable; 
   std::map<double,std::pair< std::vector<double>,std::vector<double> > > DistributionInstrumentMapTable; 
@@ -814,11 +815,11 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
   }
   MonteCarlo MC;
   std::vector<double>  enMC = MC.GetEnergy();
-  //1ere boucle sur tous les runs qui vont etre cumulé dans la bande, pour trouver la taille en energie des MC de la meanmap (dpc de la premiere dimension de la meanmap). Les EMcs de la meanmap seront compris entre le maximum de l'energie minimal des runs et le minimum de l'energie maximale des runs.
+  //1ere boucle sur tous les runs qui vont etre cumulé dans la bande, pour trouver la taille en energie des MC de la meanmap (donc de la premiere dimension de la meanmap). en effet tous les runs ont pas la meme dimension en energie MC(voir akeweightedmap dans handleresolvearea). Les EMcs de la meanmap seront compris entre le maximum de l'energie minimal des runs et le minimum de l'energie maximale des runs.
   if (configname.Contains("thsq64")) {
     
-    double Emin=enMC[0];
-    double Emax=enMC[enMC.size()-1];   
+    double Emin=enMC.front();
+    double Emax=enMC.back();   
     double EMCmin, EMCmax;
     for(unsigned int it=0; it<BandList.size();it++){
       int ib=BandList[it];
@@ -839,9 +840,11 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
     //std::cout << "final band EMC min=  "<< Emin << std::endl;
     //std::cout << "final band EMC max=  "<< Emax << std::endl;
 
-    //Initialisation de la pair vector vector pour chaque energie monte carlo EMC de la mapmean determine precedement et initialisation a zero de la valeur de la distrib
+        
     for (std::vector<double>::iterator ien = enMC.begin();ien!=enMC.end();++ien)  {
+      
       if(*ien>=Emin && *ien<=Emax){
+	
 	MeanDistributionInstrumentMapTable[*ien]=DistributionInstrumentMapTable[*ien];
 	 
 	std::vector<double> &MeanmyVect=MeanDistributionInstrumentMapTable[*ien].second;	  
@@ -851,6 +854,86 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
 	  }
     }
   }
+  
+    //Initialisation des vectors area, resolution et biais ainsi que les smooth associé car leur taille n est pas forcement egal a celle de energies MC (voir makevectorforband dans handleresolvearea). Donc on cree le tableu d energie MC correspondant aux energies des MCS de tous les runs de la band et ensuite on dit que les vectore area,resolution et biais ont la taille de ce vectr energy
+  double Emin=enMC.front();
+  double Emax=enMC.back();        
+  double EMCmin, EMCmax;
+
+
+  double eminsmooth=enMC.front();
+  double emaxsmooth=enMC.back(); 
+  double log10emin = TMath::Log10(eminsmooth);
+  double log10emax = TMath::Log10(emaxsmooth);    
+  double npoint(50);
+  double binsize = (log10emax-log10emin)/npoint;
+  double EMCminsmooth, EMCmaxsmooth;
+  for(unsigned int it=0; it<BandList.size();it++){
+    int ib=BandList[it];
+    std::vector<Band>::const_iterator itband = (VecBand.begin()+ib);
+    if (itband->GetKeepBand()==0) {
+      continue;
+    }
+    
+    EMCmin=itband->GetVectorEnergy().front();
+    EMCmax=itband->GetVectorEnergy().back();
+    EMCminsmooth=itband->GetVectorInterEnergy().front();
+    EMCmaxsmooth=itband->GetVectorInterEnergy().back();
+    if(it==1){
+      EMCmin=0.2;
+      EMCmax=40;
+      EMCminsmooth=0.3;
+      EMCmaxsmooth=62.1212;
+    }
+    
+    /*std::cout << "run EMC min=  "<< EMCmin << std::endl;
+    std::cout << "run EMC max=  "<< EMCmax << std::endl;
+    std::cout << "run smoothEMC min=  "<< EMCminsmooth << std::endl;
+    std::cout << "run smoothEMC max=  "<< EMCmaxsmooth << std::endl;*/
+    if(EMCmin>Emin) Emin=EMCmin;
+    if(EMCmax<Emax) Emax=EMCmax;
+    if(EMCminsmooth> eminsmooth) eminsmooth=EMCminsmooth;
+    if(EMCmaxsmooth< emaxsmooth) emaxsmooth=EMCmaxsmooth;
+    /*std::cout << "band EMC min=  "<< Emin << std::endl;
+    std::cout << "band EMC max=  "<< Emax << std::endl;
+    std::cout << "band smoothEMC min=  "<< eminsmooth << std::endl;
+    std::cout << "band smoothEMC max=  "<< emaxsmooth << std::endl;*/
+    //std::cout << "band EMC min=  "<< Emin << std::endl;
+    //std::cout << "band EMC max=  "<< Emax << std::endl;
+  }
+  /*std::cout << "band EMC min=  "<< Emin << std::endl;
+  std::cout << "band EMC max=  "<< Emax << std::endl;
+  std::cout << "band smoothEMC min=  "<< eminsmooth << std::endl;
+  std::cout << "band smoothEMC max=  "<< emaxsmooth << std::endl;*/
+  for (std::vector<double>::iterator ien = enMC.begin();ien!=enMC.end();++ien)  {
+    //std::cout << "*ien avant if" << *ien << std::endl;
+    //std::cout << "Emax" << Emax << std::endl;
+      if(*ien>=Emin && *ien<=Emax){
+	//std::cout << "*ien apres if" << *ien << std::endl;
+	Meanenergy_MC.push_back(*ien);
+	  }
+    }
+  for(double iensmooth(log10emin); iensmooth<=log10emax*1.001; iensmooth+=binsize) {
+    //std::cout << "*iensmooth avant if" << TMath::Power(10.,iensmooth) << std::endl;
+    //std::cout << "*iensmooth/1.001 avant if" << TMath::Power(10.,iensmooth/1.001) << std::endl;
+    //std::cout << "Esmoothmax" << emaxsmooth << std::endl;
+    if(TMath::Power(10.,iensmooth) >=eminsmooth && TMath::Power(10.,iensmooth/1.001)<=emaxsmooth){
+      //std::cout << "*iensmooth apres if" << TMath::Power(10.,iensmooth) << std::endl;
+      
+      Meansmooth_energy_MC.push_back(TMath::Power(10.,iensmooth));
+	  }
+  }
+  meanarea.resize(Meanenergy_MC.size());      
+  meanresol.resize(Meanenergy_MC.size());
+  meanbiais.resize(Meanenergy_MC.size());
+  meansmooth_area.resize(Meansmooth_energy_MC.size());
+  meansmooth_resol.resize(Meansmooth_energy_MC.size());
+  meansmooth_biais.resize(Meansmooth_energy_MC.size());
+  //std::cout << "final band EMC min=  "<< Emin << std::endl;
+  //std::cout << "final band EMC max=  "<< Emax << std::endl;
+  
+  //Initialisation de la pair vector vector pour chaque energie monte carlo EMC de la mapmean determine precedement et initialisation a zero de la valeur de la distrib
+  
   /*std::cout << "apres avoir initialise a zero" << std::endl;
   if (configname.Contains("thsq64")) {
     for (std::map< double, std::pair< std::vector<double> , std::vector<double> > >::iterator mapband = MeanDistributionInstrumentMapTable.begin(); mapband != MeanDistributionInstrumentMapTable.end();++mapband)   {
@@ -868,7 +951,7 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
   for(unsigned int it=0; it<BandList.size();it++){
     
     int ib=BandList[it];    
-    std::cout << ib << std::endl;
+    //std::cout << ib << std::endl;
     std::vector<Band>::const_iterator itband = (VecBand.begin()+ib);
     if (itband->GetKeepBand()==0) {
       continue;
@@ -876,7 +959,7 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
     //std::cout << "1er run"<< std::endl;
     DistributionInstrumentMapTable=itband->GetDistributionVectorTable();
     
-    if(iok==0) {
+    /*if(iok==0) {
       //vector energy egale dans tous les runs donc pour chaque bande on prend le vector enrgy du preier run de la liste
       //VOIR SI OK car si GetKeepBand()==0 alors ca va jamais passer
       energy_MC=itband->GetVectorEnergy();
@@ -888,7 +971,7 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
       meansmooth_area.resize(smooth_energy_MC.size());
       meansmooth_resol.resize(smooth_energy_MC.size());
       meansmooth_biais.resize(smooth_energy_MC.size());
-    }
+      }*/
      
     
     iok++;
@@ -909,38 +992,72 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
     //TROUVER COMMENT MULTIPLIER PAR UN GETLIVE TIME sans faire de boucle
     //std::cout << "Getlivetime= " << itband->GetLiveTime() << std::endl;
     
-    for(int i=0; i<energy_MC.size();i++){
+    int i_run=0;
+    int itest=0;
+    energy_MC=itband->GetVectorEnergy();
+    /*std::cout << "min MC band" << Meanenergy_MC.front() << std::endl;
+    std::cout << "min MC run" << energy_MC.front() << std::endl;    
+    std::cout << "max MC band" << Meanenergy_MC.back() << std::endl;
+    std::cout << "max MC run" << energy_MC.back() << std::endl;  */
+    for(int i=0; i< Meanenergy_MC.size();i++){
+      if(itest==0){
+	while(energy_MC[i_run]!=Meanenergy_MC[i]) {
+	  //std::cout << i_run << std::endl;
+	  //std::cout << energy_MC[i_run]  << std::endl;
+	  i_run++;
+	}
+      }
+      //std::cout << energy_MC[i_run] << " " << i_run << std::endl;
       /*std::cout << "mean area"<< meanarea[i] << std::endl;
       std::cout << "mean resolution"<< meanresol[i] << std::endl;
       std::cout << "mean biais"<<meanresol[i] << std::endl;
       std::cout << "run area"<< itband->GetVectorArea()[i] << std::endl;
       std::cout << "run resol"<< itband->GetVectorResolution()[i] << std::endl;
       std::cout << "run biais"<< itband->GetVectorBiais()[i] << std::endl;*/
-      meanarea[i]=meanarea[i]+itband->GetVectorArea()[i]*itband->GetLiveTime();      
-      meanresol[i]= meanresol[i]+itband->GetVectorResolution()[i]*itband->GetLiveTime();
-      meanbiais[i]=meanbiais[i]+itband->GetVectorBiais()[i]*itband->GetLiveTime();
+      meanarea[i]=meanarea[i]+itband->GetVectorArea()[i_run]*itband->GetLiveTime();      
+      meanresol[i]= meanresol[i]+itband->GetVectorResolution()[i_run]*itband->GetLiveTime();
+      meanbiais[i]=meanbiais[i]+itband->GetVectorBiais()[i_run]*itband->GetLiveTime();
       /*std::cout << "mean area"<< meanarea[i] << std::endl;
       std::cout << "mean resolution"<< meanresol[i] << std::endl;
       std::cout << "mean biais"<<meanresol[i] << std::endl;*/
+      i_run++;
+      itest++;
     }
     std::cout << std::endl;
-    for(int j=0; j<smooth_energy_MC.size();j++){  
+    int j_run=0;
+    itest=0;
+    smooth_energy_MC=itband->GetVectorInterEnergy();
+    /*std::cout << "min MCsmooth band" << Meansmooth_energy_MC.front() << std::endl;
+    std::cout << "min MCsmooth run" << smooth_energy_MC.front() << std::endl;
+    std::cout << "max MCsmooth band" << Meansmooth_energy_MC.back() << std::endl;
+    std::cout << "max MCsmooth run" << smooth_energy_MC.back() << std::endl;*/
+    for(int j=0; j<Meansmooth_energy_MC.size();j++){ 
+      if(itest==0){
+	while(smooth_energy_MC[j_run]!=Meansmooth_energy_MC[j]){ 
+	  //std::cout << j_run << std::endl;
+	  //std::cout << smooth_energy_MC[j_run]  << std::endl;
+	  j_run++;
+	}
+      }
+      //std::cout << smooth_energy_MC[j_run] << " " << j_run << std::endl;
       /*std::cout << "smoothmean area"<< meansmooth_area[j] << std::endl;
       std::cout << "smoothmean resolution"<< meansmooth_resol[j] << std::endl;
       std::cout << "smoothmean biais"<<meansmooth_resol[j] << std::endl;
       std::cout << "smoothrun area"<< itband->GetVectorInterArea()[j] << std::endl;
       std::cout << "smoothrun resol"<< itband->GetVectorInterResolution()[j] << std::endl;
       std::cout << "smoothrun biais"<< itband->GetVectorInterBiais()[j] << std::endl;*/
-      meansmooth_area[j]=meansmooth_area[j]+itband->GetVectorInterArea()[j]*itband->GetLiveTime();
-      meansmooth_resol[j]=meansmooth_resol[j]+itband->GetVectorInterResolution()[j]*itband->GetLiveTime();
-      meansmooth_biais[j]=meansmooth_biais[j]+itband->GetVectorInterBiais()[j]*itband->GetLiveTime();
+      meansmooth_area[j]=meansmooth_area[j]+itband->GetVectorInterArea()[j_run]*itband->GetLiveTime();
+      meansmooth_resol[j]=meansmooth_resol[j]+itband->GetVectorInterResolution()[j_run]*itband->GetLiveTime();
+      meansmooth_biais[j]=meansmooth_biais[j]+itband->GetVectorInterBiais()[j_run]*itband->GetLiveTime();
       /*std::cout << "smoothmean area"<< meansmooth_area[j] << std::endl;
       std::cout << "smoothmean resolution"<< meansmooth_resol[j] << std::endl;
       std::cout << "smoothmean biais"<<meansmooth_resol[j] << std::endl;*/
+      j_run++;
+      itest++;
      }
     if (configname.Contains("thsq64")) {
       std::map< double, std::pair< std::vector<double> , std::vector<double> > >::iterator mapmeanband = MeanDistributionInstrumentMapTable.begin();
-      int itest=0;
+      itest=0;
       /*if(DistributionInstrumentMapTable.begin()->first!=MeanDistributionInstrumentMapTable.begin()->first){
 	std::cout<< "Min emc.begin different"<< std::endl;
       std::cout << "EMc meanmap= " << MeanDistributionInstrumentMapTable.begin()->first << std::endl;
@@ -1011,7 +1128,7 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
     meanoffset=meanoffset/total_time;
     meanehtresh=meanehtresh/total_time;
    
-    for(int i=0; i<  energy_MC.size();i++){
+    for(int i=0; i<  Meanenergy_MC.size();i++){
       /*std::cout << "mean area"<< meanarea[i] << std::endl;
       std::cout << " mean resolution"<< meanresol[i] << std::endl;
       std::cout << "mean biais"<<meanresol[i] << std::endl;*/
@@ -1022,7 +1139,7 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
       std::cout << "divise par total time mean resolution"<< meanresol[i] << std::endl;
       std::cout << "divise par total time mean biais"<<meanresol[i] << std::endl;*/
     }
-    for(int j=0; j< smooth_energy_MC.size();j++){
+    for(int j=0; j< Meansmooth_energy_MC.size();j++){
       /*std::cout << "smoothmean area"<< meansmooth_area[j] << std::endl;
       std::cout << "smoothmean resolution"<< meansmooth_resol[j] << std::endl;
       std::cout << "smoothmean biais"<<meansmooth_resol[j] << std::endl;*/
