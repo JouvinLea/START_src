@@ -1366,11 +1366,14 @@ void START::BandsFactory::ReprojBands(std::vector<Band> &BandArray,std::map<TStr
       
     }  
   std::cout << "avant copyinterpolator in band" << std::endl;
+  int n;
   for (std::vector<Band>::iterator iband=ReprojArray.begin(); iband!=ReprojArray.end();++iband) {
     iband->SetGSLInterpolatorForArea(iband->GetVectorEnergy(),iband->GetVectorArea());
     iband->SetGSLInterpolatorForBiais(iband->GetVectorEnergy(),iband->GetVectorBiais());
     iband->SetGSLInterpolatorForResolution(iband->GetVectorEnergy(),iband->GetVectorResolution());
     if (configname.Contains("thsq64")) {
+      //n=(iband->GetDistributionVectorTable()).size();
+      //std::cout << n << std::endl;
       iband->InitDistributionInterpTable();
     }
   }
