@@ -1589,6 +1589,21 @@ int START::HandleResolArea::CopyInterpolatorsInBands()
   return 1;
 }
 
+//surcharge de la fonction precedente ou en entree on donne l objetband
+int START::HandleResolArea::CopyInterpolatorsInBands(std::vector<Band> &InputBandArray)
+{
+  
+  for (std::vector<Band>::iterator iband=InputBandArray.begin(); iband!=InputBandArray.end();++iband) {
+    iband->SetGSLInterpolatorForArea(iband->GetVectorEnergy(),iband->GetVectorArea());
+    iband->SetGSLInterpolatorForBiais(iband->GetVectorEnergy(),iband->GetVectorBiais());
+    iband->SetGSLInterpolatorForResolution(iband->GetVectorEnergy(),iband->GetVectorResolution());
+    if (fForceUseDistribution) {
+      iband->InitDistributionInterpTable();
+    }
+  }
+
+  return 1;
+}
 /**
  * \brief Copy interpolators in bins
  */
@@ -1603,7 +1618,18 @@ int START::HandleResolArea::CopyInterpolatorsInBins()
 
   return 1;
 }
+//surcharge de la fonction precedente ou en entree on donne l objetband
+int START::HandleResolArea::CopyInterpolatorsInBins(std::vector<Band> &InputBandArray)
+{
+    
+  for (std::vector<Band>::iterator iband=InputBandArray.begin(); iband!=InputBandArray.end();++iband) {
+    for (std::vector<EnergyBin>::iterator iener = (iband->ebin).begin(); iener!= (iband->ebin).end(); ++iener) {
+      iener->SetGSLInterpolatorForPartialIntegral(iener->GetPartialIntegral());
+    }
+  }
 
+  return 1;
+}
 /**
  * Copy vectors of resolution, energy and area in object bands
  */
@@ -1709,6 +1735,51 @@ void START::HandleResolArea::SetInBandsFirstEmcBin() {
   }
 }
 
+void START::HandleResolArea::SetInBandsFirstEmcBin(std::vector<Band> &InputBandArray) {
+
+  for(int iband(0); iband< InputBandArray.size(); iband++) {
+
+    if(InputBandArray[iband].GetKeepBand()==0) continue;
+
+    std::vector<double> energy = InputBandArray[iband].GetVectorEnergy();
+    std::vector<double> resol  = InputBandArray[iband].GetVectorResolution();
+    std::vector<double> area   = InputBandArray[iband].GetVectorArea();
+    std::vector<double> biais  = InputBandArray[iband].GetVectorBiais();
+
+    /*
+      Note that Band::fVectorArea, Band::fVectorResolution and Band::fVectorBiais
+      have been filled in MakeVectorForBand so as to be 0 if no correct information 
+      is available.
+    */
+
+    int binnum(-1);
+    for (int ie(0); ie<(int)energy.size() ; ie++) {
+      double prod = TMath::Abs(area[ie]*resol[ie]*biais[ie]);
+      //std::cout<<ie<<" "<<area[ie]<<" "<<resol[ie]<<" "<<biais[ie]<<" "<<prod<<std::endl;
+      if (prod>1e-3) {
+	binnum=ie;
+	break;
+      }
+    }
+
+    InputBandArray[iband].SetFirstEmcBinNumber(binnum);
+    //InputBandArray[iband].SetFirstEmcVal(energy[binnum]);
+    InputBandArray[iband].SetFirstEmcValFit(energy[binnum]); // VIM
+    /*std::cout <<"energy["<<binnum<<"]="<<energy[binnum]
+      <<"  InputBandArray["<<iband<<"].GetFirstEmcVal()="
+      <<InputBandArray[iband].GetFirstEmcVal() << std::endl;*/
+    energy.clear(); resol.clear();  area.clear();  biais.clear();  
+    
+    if (fForceUseDistribution) {
+      // std::cout << "((InputBandArray[iband].GetDistributionVectorTable()).begin())->first = " 
+      //<< (((InputBandArray[iband]).GetDistributionVectorTable()).begin())->first << std::endl;
+      (InputBandArray[iband]).SetFirstEmcValDistrib((((InputBandArray[iband]).GetDistributionVectorTable()).begin())->first);
+    }
+    //std::cout << "VIM DEBUG> GetFirstEmcValFit() = " << InputBandArray[iband].GetFirstEmcValFit() 
+    //<< " GetFirstEmcValDistrib() = " << InputBandArray[iband].GetFirstEmcValDistrib() << std::endl;
+  }
+}
+
 
 /**
  * \brief Determine the value of 0 for a function by a dichotomie function.
@@ -1810,6 +1881,22 @@ void START::HandleResolArea::SetInBinsEffectiveArea() {
 
 }
 
+//surcharge de la fonction precedente
+void START::HandleResolArea::SetInBinsEffectiveArea(std::vector<Band> &InputBandArray) {
+
+  for(std::vector<Band>::iterator band=InputBandArray.begin(); band!=InputBandArray.end(); ++band) {
+
+    if(band->GetKeepBand()==0) continue; // only intrested in selected bands
+
+    for(std::vector<EnergyBin>::iterator bin=band->ebin.begin(); bin!=band->ebin.end(); ++bin) {
+      
+      bin->SetAcceff(band->GetInterpolatedArea(bin->GetEmid())*1.e-4);
+
+    }
+
+  }
+
+}
 /**
  * \brief Set the flag in bins. If keepbin=1 the bin is kept and if not
  * keepbin=0
@@ -1819,6 +1906,43 @@ void START::HandleResolArea::SetInBinsKeepBin()
 {
 
   for(std::vector<Band>::iterator band=fBandArray->begin(); band!=fBandArray->end(); ++band) {
+
+    if(band->GetKeepBand()==0) continue; // only interested in selected bands
+
+    for(std::vector<EnergyBin>::iterator bin=band->ebin.begin(); bin!=band->ebin.end(); ++bin) {
+      
+      switch(fEnergyBinThresholdCondition) {
+      case Safe:
+	if(bin->GetEmin()>=band->GetEthMC() && bin->GetKeepBin()==1) bin->SetKeepBin(1);
+	else bin->SetKeepBin(0);
+	break;
+      case Explorer:
+	if(bin->GetEmin()>=band->GetEthMC() && bin->GetKeepBin()==1) bin->SetKeepBin(1);
+	else if(band->GetEthMC()>bin->GetEmin() && band->GetEthMC()<bin->GetEmax() && 
+		(TMath::Abs(bin->GetEmin()-band->GetEthMC())<TMath::Abs(bin->GetEmax()-band->GetEthMC())) && 
+		bin->GetKeepBin()==1) bin->SetKeepBin(1);
+	else bin->SetKeepBin(0);
+	  /*
+	    if(bin->GetEmax()>=band->GetEthMC() && bin->GetKeepBin()==1) bin->SetKeepBin(1);
+	    else if((bin->GetEmin()>=band->GetEthMC() && bin->GetEmax()<=band->GetEthMC()) && 
+		(TMath::Abs(bin->GetEmin()-band->GetEthMC())<TMath::Abs(bin->GetEmax()-band->GetEthMC())) && 
+		bin->GetKeepBin()==1) bin->SetKeepBin(1);
+	  */
+	break;
+      case Insane:
+	bin->SetKeepBin(1);
+      }
+	
+    }
+
+  }
+
+}
+
+void START::HandleResolArea::SetInBinsKeepBin(std::vector<Band> &InputBandArray)
+{
+
+  for(std::vector<Band>::iterator band=InputBandArray.begin(); band!=InputBandArray.end(); ++band) {
 
     if(band->GetKeepBand()==0) continue; // only interested in selected bands
 
@@ -1908,8 +2032,29 @@ void START::HandleResolArea::SetInBandsMCEnergyThreshold()
     }
   }
 }
+//surchage de la fonction precedente avec un objet band
+void START::HandleResolArea::SetInBandsMCEnergyThreshold(std::vector<Band> &InputBandArray)
+{
+  DEBUG_OUT << "VIM : Tu dois modifier cette fonction !!!" << std::endl;
+  
+  //fAreaMin=0.0;
+  //fResolFactor;
+  for(int iband=0; iband<InputBandArray.size(); iband++) {
+    if(InputBandArray[iband].GetKeepBand()==0) continue;
 
-
+    switch(fSafeThresholdMethod) {
+    case AreaMaxMethod :
+      ComputeSafeThresholdFromAreaMaxFraction(InputBandArray[iband],fFractionMaxArea);
+      break;
+    case AreaAndBiaisResolMethod :
+      ComputeSafeThresholdFromAreaAndResolFactor(InputBandArray[iband],fAreaMin,fResolFactor);
+      break;
+    default :
+      WARN_OUT << "I DON'T KNOW WHICH METHOD TO APPLY FOR THE SAFE THRESHOLD..." << std::endl;
+      exit(EXIT_FAILURE);
+    }
+  }
+}
 
 /**
  * \brief Determine MC energy threshold at save it in bands.

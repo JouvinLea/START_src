@@ -950,10 +950,11 @@ void START::Band::AddInfoFromSelectedBands(const std::vector<Band> &VecBand,cons
     }*/
   //iok permet de determiner le premier run de la list qui est ok et pour celui la on recupere le vetor energyui est le meme dans tous les autres
   int iok=0;
+  std::cout << "BandList.size()" << BandList.size() << std::endl;
   for(unsigned int it=0; it<BandList.size();it++){
     
     int ib=BandList[it];    
-    //std::cout << ib << std::endl;
+    std::cout << ib << std::endl;
     std::vector<Band>::const_iterator itband = (VecBand.begin()+ib);
     if (itband->GetKeepBand()==0) {
       continue;
